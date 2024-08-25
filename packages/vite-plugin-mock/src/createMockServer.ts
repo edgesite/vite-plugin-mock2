@@ -94,7 +94,7 @@ export async function requestMiddleware(opt: ViteMockOptions) {
         }
         res.statusCode = statusCode || 200
         const mockResponse = isFunction(response)
-          ? response.bind(self)({ url: req.url as any, body, query, headers: req.headers })
+          ? response.bind(self)({ url: req.url as any, body, query, headers: req.headers, req, res })
           : response
         res.end(JSON.stringify(Mock.mock(mockResponse)))
       }
