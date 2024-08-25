@@ -87,16 +87,41 @@ export async function requestMiddleware(opt: ViteMockOptions) {
         await rawResponse.bind(self)(req, res)
       } else {
         const body = await parseJson(req)
-        res.setHeader('Content-Type', 'application/json')
         if (opt) {
           res.setHeader('Access-Control-Allow-Credentials', true)
           res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
         }
         res.statusCode = statusCode || 200
-        const mockResponse = isFunction(response)
-          ? response.bind(self)({ url: req.url as any, body, query, headers: req.headers, req, res })
-          : response
-        res.end(JSON.stringify(Mock.mock(mockResponse)))
+        let mockResponse = Mock.mock(
+          isFunction(response)
+            ? response.bind(self)({
+                url: req.url as any,
+                body,
+                query,
+                headers: req.headers,
+                req,
+                res,
+              })
+            : response,
+        )
+        if (typeof mockResponse === 'undefined') {
+          res.statusCode = 204
+          res.end()
+          return
+        }
+        if (!res.statusCode) {
+          res.statusCode = statusCode || 200
+        }
+        if (!res.getHeader('Content-Type')) {
+          res.setHeader('Content-Type', guessContentType(mockResponse))
+        }
+        if (
+          res.getHeader('Content-Type') === 'application/json' &&
+          typeof mockResponse !== 'string'
+        ) {
+          mockResponse = JSON.stringify(mockResponse)
+        }
+        res.end(mockResponse)
       }
 
       logger && loggerOutput('request invoke', req.url!)
@@ -105,6 +130,19 @@ export async function requestMiddleware(opt: ViteMockOptions) {
     next()
   }
   return middleware
+}
+
+function guessContentType(body: any) {
+  if (body instanceof Buffer || body instanceof Uint8Array) {
+    return 'application/octet-stream'
+  }
+  switch (typeof body) {
+    case 'string':
+      return 'text/plain'
+    case 'undefined':
+    default:
+      return 'application/json'
+  }
 }
 
 // create watch mock

@@ -183,6 +183,36 @@ export default [
       },
     },
   },
+  // Custom status code and response
+  {
+    url: '/api/query',
+    method: 'get',
+    response: ({ query, res }) => {
+      // res.setHeader('X-Hello', 'World')
+      if (query.name === 'vite') {
+        res.statusCode = 200
+        return { message: 'OK' }
+      } else {
+        res.statusCode = 404
+        return { message: 'Not Found' }
+      }
+    },
+  },
+  {
+    url: '/api/plaintext',
+    method: 'get',
+    response: () => {
+      return '200 OK'
+    },
+  },
+  // 204 No Content
+  {
+    url: '/api/204',
+    method: 'get',
+    response: () => {
+      return
+    },
+  },
   {
     url: '/api/text',
     method: 'post',
