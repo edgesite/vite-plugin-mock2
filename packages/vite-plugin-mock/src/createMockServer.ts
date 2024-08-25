@@ -87,8 +87,8 @@ export async function requestMiddleware(opt: ViteMockOptions) {
         await rawResponse.bind(self)(req, res)
       } else {
         const body = await parseJson(req)
-        if (opt) {
-          res.setHeader('Access-Control-Allow-Credentials', true)
+        if (opt.cors) {
+          res.setHeader('Access-Control-Allow-Credentials', 'true')
           res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
         }
         res.statusCode = statusCode || 200
