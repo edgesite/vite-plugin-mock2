@@ -1,7 +1,7 @@
 {
-  "name": "vite-plugin-mock2",
-  "version": "3.0.4",
-  "description": "A mock plugin for vite",
+  "name": "vite-plugin-mock-mod",
+  "version": "3.0.5",
+  "description": "Enhanced vite-plugin-mock.",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
