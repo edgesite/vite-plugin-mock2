@@ -173,6 +173,18 @@ export default [
     },
   },
   {
+    url: '/api/get',
+    method: 'get',
+    response: async ({ query }) => {
+      return {
+        code: 0,
+        data: {
+          name: 'vben',
+        },
+      }
+    },
+  },
+  {
     url: '/api/post',
     method: 'post',
     timeout: 2000,

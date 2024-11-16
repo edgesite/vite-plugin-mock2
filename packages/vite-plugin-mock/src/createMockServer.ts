@@ -62,7 +62,7 @@ export async function requestMiddleware(opt: ViteMockOptions) {
 
     if (matchRequest) {
       const isGet = req.method && req.method.toUpperCase() === 'GET'
-      const { response, rawResponse, timeout, statusCode, url } = matchRequest
+      const { response: handler, rawResponse, timeout, statusCode, url } = matchRequest
 
       if (timeout) {
         await sleep(timeout)
@@ -92,19 +92,21 @@ export async function requestMiddleware(opt: ViteMockOptions) {
           res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
         }
         res.statusCode = statusCode || 200
-        let mockResponse = Mock.mock(
-          isFunction(response)
-            ? response.bind(self)({
-                url: req.url as any,
-                body,
-                query,
-                headers: req.headers,
-                req,
-                res,
-              })
-            : response,
-        )
-        if (typeof mockResponse === 'undefined') {
+        let response = isFunction(handler)
+          ? handler.bind(self)({
+              url: req.url as any,
+              body,
+              query,
+              headers: req.headers,
+              req,
+              res,
+            })
+          : handler
+        if (response.then) {
+          response = await response
+        }
+        response = Mock.mock(response)
+        if (typeof response === 'undefined') {
           res.statusCode = 204
           res.end()
           return
@@ -113,15 +115,12 @@ export async function requestMiddleware(opt: ViteMockOptions) {
           res.statusCode = statusCode || 200
         }
         if (!res.getHeader('Content-Type')) {
-          res.setHeader('Content-Type', guessContentType(mockResponse))
+          res.setHeader('Content-Type', guessContentType(response))
         }
-        if (
-          res.getHeader('Content-Type') === 'application/json' &&
-          typeof mockResponse !== 'string'
-        ) {
-          mockResponse = JSON.stringify(mockResponse)
+        if (res.getHeader('Content-Type') === 'application/json' && typeof response !== 'string') {
+          response = JSON.stringify(response)
         }
-        res.end(mockResponse)
+        res.end(response)
       }
 
       logger && loggerOutput('request invoke', req.url!)
